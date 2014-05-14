@@ -1,0 +1,367 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Rails: rendering the right view - jamesalmond.com blog</title>
+  <meta name="author" content="James Almond">
+
+  
+  <meta name="description" content="I&#8217;ve recently seen an article on Rails best practices that encouraged the use of a &#8216;magic&#8217; controller gem to abstract all the &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.jamesalmond.com/rails-rendering-the-right-view">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="jamesalmond.com blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">jamesalmond.com blog</a></h1>
+  
+    <h2>Thoughts of a thinker</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.jamesalmond.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Rails: rendering the right view</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-11-09T00:00:00+00:00" pubdate data-updated="true"></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://blog.jamesalmond.com">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I&#8217;ve recently seen an article on Rails best practices that encouraged the use of a &#8216;magic&#8217; controller gem to abstract all the controller logic away from the user. Now, I&#8217;m all for skinny controllers (I&#8217;ll come to the fat models at a later date) and I&#8217;m sure these gems work great for basic CRUD apps but who&#8217;s ever created &#8216;just a basic CRUD app&#8217;?  These kind of gems, along with most of the tutorials I&#8217;ve seen, reinforce the idea that a controller can only redirect or render a view that matches the name of the method. Want to render something based on the state of the model then you just use a partial, right?</p>
+
+<p>Well, no. I believe that the view should be responsible for taking an object (or multiple objects) and rendering the required output; not taking some objects and choosing which views to render based on their state. It&#8217;s the job of the controller to choose what to render. The offending code generally looks something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1">#some_object_controller.rb</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">SomeObjectController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">search</span>
+</span><span class='line'>    <span class="vi">@search_results</span> <span class="o">=</span> <span class="no">SomeClass</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:search_term</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># search.html.haml</span>
+</span><span class='line'><span class="o">-</span> <span class="k">if</span> <span class="vi">@search_results</span><span class="o">.</span><span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span>
+</span><span class='line'>  <span class="o">-</span> <span class="vi">@search_results</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">result</span><span class="o">|</span>
+</span><span class='line'>    <span class="c1">#...</span>
+</span><span class='line'><span class="o">-</span> <span class="k">else</span>
+</span><span class='line'>  <span class="o">%</span><span class="nb">p</span> <span class="no">Sorry</span><span class="p">,</span> <span class="n">you</span> <span class="n">have</span> <span class="n">no</span> <span class="n">results!</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This can be refactored to something like the following:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1">#some_object_controller.rb</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">SomeObjectController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">search</span>
+</span><span class='line'>    <span class="vi">@search_results</span> <span class="o">=</span> <span class="no">SomeClass</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:search_term</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="vi">@search_results</span><span class="o">.</span><span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span>
+</span><span class='line'>      <span class="n">render</span> <span class="ss">:search_results</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="n">render</span> <span class="ss">:no_search_results</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># search_results.html.haml</span>
+</span><span class='line'><span class="o">-</span> <span class="vi">@search_results</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">result</span><span class="o">|</span>
+</span><span class='line'>  <span class="c1">#...</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># no_search_results.html.haml</span>
+</span><span class='line'><span class="o">%</span><span class="nb">p</span> <span class="no">Sorry</span><span class="p">,</span> <span class="n">you</span> <span class="n">have</span> <span class="n">no</span> <span class="n">results!</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This clearly separates the responsibility of each view. You can even do something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">SomeObjectController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">show</span>
+</span><span class='line'>    <span class="vi">@object</span> <span class="o">=</span> <span class="no">SomeObject</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">render</span> <span class="vi">@object</span><span class="o">.</span><span class="n">status</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>With the corresponding view file for each of the (finite) states of the object.</p>
+
+<p>&#8220;But you shouldn&#8217;t put logic in your controllers!&#8221;. Yes, you should.  You should put controller logic in your controllers. Agreed, you shouldn&#8217;t put business logic or the logic of your storage layer in a controller; but the logic about what should be done with the results of a query (or similar) is definitely suited to the controller.</p>
+
+<p>How do we benefit:</p>
+
+<ul>
+<li>Although controllers aren&#8217;t the easiest thing to test, views are even more laborious. Moving the logic from the view to the controller makes it easier to test.</li>
+<li>The view now has a single responsibility. One view is responsible for rendering no results, one for rendering a sequence of results. This makes it less fragile: you&#8217;re less likely to break another part of the system when changing the no results page.</li>
+<li>As each view has an individual responsibility it becomes easier to find the view when it needs changing. As long as you use understandable file names.</li>
+<li>The view no longer has logic in it. Great for anyone that writes HTML/HAML but is scared of teh Rubies!</li>
+</ul>
+
+
+<p>This small refactor has the effect of making your intentions more easily testable, your views clearers and your code more flexible and less fragile.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">James Almond</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-11-09T00:00:00+00:00" pubdate data-updated="true"></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://blog.jamesalmond.com/rails-rendering-the-right-view" data-via="JamesAlmond" data-counturl="http://blog.jamesalmond.com/rails-rendering-the-right-view" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/testing-asynchronous-sinatra-with-rspec-and-c" title="Previous Post: Testing asynchronous Sinatra with RSpec and Cucumber">&laquo; Testing asynchronous Sinatra with RSpec and Cucumber</a>
+      
+      
+        <a class="basic-alignment right" href="/are-best-practices-a-best-practice" title="Next Post: Are 'best practices' a best practice?">Are 'best practices' a best practice? &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/using-simple-form-in-an-engine">Using simple_form in a Rails 3 engine</a>
+      </li>
+    
+      <li class="post">
+        <a href="/what-if-you-could-only-tweet-5-times-a-day">What if you could only tweet 5 times a day?</a>
+      </li>
+    
+      <li class="post">
+        <a href="/simple-rails-route-helpers">Simple Rails route helpers</a>
+      </li>
+    
+      <li class="post">
+        <a href="/testing-gems-with-cucumber">Cucumber for gem documentation</a>
+      </li>
+    
+      <li class="post">
+        <a href="/using-pygmentize-with-jekyll">Pygmentize errors with Jekyll</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/jamesalmond">@jamesalmond</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'jamesalmond',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - James Almond -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'jamesalmond';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

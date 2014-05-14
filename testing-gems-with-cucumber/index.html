@@ -1,0 +1,483 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Cucumber for gem documentation - jamesalmond.com blog</title>
+  <meta name="author" content="James Almond">
+
+  
+  <meta name="description" content="I released my first gem, Dozuki, a few weeks ago (work in progress!), both because I thought the functionality I was extracting could be useful to &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.jamesalmond.com/testing-gems-with-cucumber">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="jamesalmond.com blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">jamesalmond.com blog</a></h1>
+  
+    <h2>Thoughts of a thinker</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.jamesalmond.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Cucumber for gem documentation</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-02-22T00:00:00+00:00" pubdate data-updated="true"></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://blog.jamesalmond.com">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I released my first gem, <a href="http://github.com/jamesalmond/dozuki">Dozuki</a>, a few weeks ago (work in progress!), both because I thought the functionality I was extracting could be useful to others but also as a bit of a test-bed for trying some new things with testing.</p>
+
+<p>Alongside playing with some different ways of writing mocked and stubbed tests, I wanted to have a go at writing some Cucumber features that could also be used as <a href="http://relishapp.com">Relish</a>-style documentation.</p>
+
+<p>My experience of Cucumber in the Rails world is using it for customer-facing acceptance/integration tests with the steps driving the interface of a web app using something like <a href="https://github.com/jnicklas/capybara">Capybara</a>.</p>
+
+<p>With Dozuki I wanted the Cucumber to be a way of clearly specifying what a feature should do, a way of integration testing the code and, to avoid duplicating effort, a set of documentation on how to use the code. Not too far from the intent of my normal features but the difference here is the way the steps are expressed. Let&#8217;s have a look at extracting an integer from an XML document:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='cucumber'><span class='line'><span class="k">Feature:</span><span class="nf"> Getting integers from the document</span>
+</span><span class='line'><span class="nf">  In order to provide simpler way of getting integers from a node</span>
+</span><span class='line'><span class="nf">  As a traverser</span>
+</span><span class='line'><span class="nf">  I want to access nodes using the int method and an xpath</span>
+</span><span class='line'><span class="nf">  </span>
+</span><span class='line'><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> getting the int of a single node</span>
+</span><span class='line'><span class="k">    When </span><span class="nf">I parse the XML:</span>
+</span><span class='line'><span class="nf">      </span><span class="k">&quot;&quot;&quot;</span><span class="s"></span>
+</span><span class='line'><span class="s">        </span><span class="nv">&lt;root&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">          </span><span class="nv">&lt;name&gt;</span><span class="s">St. George&#39;s Arms</span><span class="nv">&lt;/name&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">          </span><span class="nv">&lt;average_price&gt;</span><span class="s">20.32</span><span class="nv">&lt;/average_price&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">          </span><span class="nv">&lt;number_of_beers&gt;</span><span class="s">2</span><span class="nv">&lt;/number_of_beers&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">        </span><span class="nv">&lt;/root&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">      </span><span class="k">&quot;&quot;&quot;</span><span class="nf"></span>
+</span><span class='line'><span class="nf">    </span><span class="k">And </span><span class="nf">I call &quot;</span><span class="s">int(&#39;/root/number_of_beers&#39;)</span><span class="nf">&quot; on the document</span>
+</span><span class='line'><span class="nf">    </span><span class="k">Then </span><span class="nf">the result should be </span><span class="s">2</span><span class="nf"></span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For a standard web app I&#8217;d try to not couple my steps too closely to the
+implementation, making the features a little less brittle (e.g. using
+&#8220;When I add the post&#8221; instead of the more explicit &#8220;When press &#8216;Add Post&#8217;&#8221;).
+Here I want the exact opposite. I want my features to be coupled directly to
+the implementation so I can demonstrate how to use it. To help with that I&#8217;ve
+put the XML explicitly in each step. This stops the reader from having to
+look in background steps for each scenario and allows you to change the XML
+between scenarios. Secondly, I&#8217;ve used an actual code snippet on the penultimate
+line. But you&#8217;ll notice that the amount of code I&#8217;ve used is minimal. Too keep
+the feature readable, I&#8217;ve only used the amount of code needed to demonstrate
+the feature I&#8217;m currently testing and documenting; we&#8217;re going to need another
+feature and set of scenarios for the creation of a document.</p>
+
+<p>Let&#8217;s have a look at the steps behind the features:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="no">When</span> <span class="sr">/^I parse the XML:$/</span> <span class="k">do</span> <span class="o">|</span><span class="n">string</span><span class="o">|</span>
+</span><span class='line'>  <span class="vi">@doc</span> <span class="o">=</span> <span class="ss">Dozuki</span><span class="p">:</span><span class="ss">:XML</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">When</span> <span class="sr">/^I call &quot;([^&quot;]*)&quot; on the document$/</span> <span class="k">do</span> <span class="o">|</span><span class="n">code</span><span class="o">|</span>
+</span><span class='line'>  <span class="vi">@result</span> <span class="o">=</span> <span class="vi">@doc</span><span class="o">.</span><span class="n">instance_eval</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">Then</span> <span class="sr">/^the result should be (\d+)$/</span> <span class="k">do</span> <span class="o">|</span><span class="n">int</span><span class="o">|</span>
+</span><span class='line'>  <span class="vi">@result</span><span class="o">.</span><span class="n">should</span> <span class="o">==</span> <span class="n">int</span><span class="o">.</span><span class="n">to_i</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The only noteworthy step here is the second, allowing us to execute the
+code we&#8217;ve specified in the scenario against the document created in the
+previous step by simply evaluating the code against the instance. The other two should be self-explanatory.</p>
+
+<p>In another example we might want to assert that a certain piece of code
+raises an error:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='cucumber'><span class='line'><span class="k">Scenario:</span><span class="nf"> getting the int of a non-existent node</span>
+</span><span class='line'><span class="k">  When </span><span class="nf">I parse the XML:</span>
+</span><span class='line'><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span><span class="s"></span>
+</span><span class='line'><span class="s">      </span><span class="nv">&lt;root&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">        </span><span class="nv">&lt;name&gt;</span><span class="s">St. George&#39;s Arms</span><span class="nv">&lt;/name&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">        </span><span class="nv">&lt;average_price&gt;</span><span class="s">20.32</span><span class="nv">&lt;/average_price&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">        </span><span class="nv">&lt;number_of_beers&gt;</span><span class="s">2</span><span class="nv">&lt;/number_of_beers&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">      </span><span class="nv">&lt;/root&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">    </span><span class="k">&quot;&quot;&quot;</span><span class="nf"></span>
+</span><span class='line'><span class="nf">  </span><span class="k">Then </span><span class="nf">calling &quot;</span><span class="s">int(&#39;//something/missing&#39;)</span><span class="nf">&quot; on the document should raise a &quot;</span><span class="s">NotFound</span><span class="nf">&quot; error</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here we&#8217;ve got to do something a bit cleverer than the previous step as
+the raised error has to be caught:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="no">Then</span> <span class="sr">/^calling &quot;([^&quot;]*)&quot; on the document should raise a &quot;([^&quot;]*)&quot; error$/</span> <span class="k">do</span> <span class="o">|</span><span class="n">code</span><span class="p">,</span> <span class="n">error</span><span class="o">|</span>
+</span><span class='line'>  <span class="k">begin</span>
+</span><span class='line'>    <span class="vi">@doc</span><span class="o">.</span><span class="n">instance_eval</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">fail</span> <span class="s2">&quot;Expected error </span><span class="si">#{</span><span class="n">error</span><span class="si">}</span><span class="s2">, nothing raised&quot;</span>
+</span><span class='line'>  <span class="k">rescue</span> <span class="ss">Dozuki</span><span class="p">:</span><span class="ss">:XML</span><span class="o">.</span><span class="n">const_get</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">e</span>
+</span><span class='line'>    <span class="vi">@error</span> <span class="o">=</span> <span class="n">e</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here the code is being evaluated against the instance as before, but if
+no error is raised then we force a failure. The step only matches
+against the error we&#8217;ve defined by getting the Exception constant from
+the gem&#8217;s scope using the name set in the scenario. The error is also
+assinged to an instance variable in case we need to inspect it in
+further steps.</p>
+
+<p>These steps and features work well and remain fairly simple but what
+about methods that take a block as an argument? How do we write feature
+for those without the implementation details getting in the way? An
+example in Dozuki is a simplified XPath each method:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='cucumber'><span class='line'><span class="k">Scenario:</span><span class="nf"> using each to traverse a document and getting the integer elements</span>
+</span><span class='line'><span class="k">  When </span><span class="nf">I parse the XML:</span>
+</span><span class='line'><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span><span class="s"></span>
+</span><span class='line'><span class="s">      </span><span class="nv">&lt;root&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">        </span><span class="nv">&lt;name&gt;</span><span class="s">St. George&#39;s Arms</span><span class="nv">&lt;/name&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">        </span><span class="nv">&lt;average_price&gt;</span><span class="s">20.32</span><span class="nv">&lt;/average_price&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">        </span><span class="nv">&lt;number_of_beers&gt;</span><span class="s">2</span><span class="nv">&lt;/number_of_beers&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">        </span><span class="nv">&lt;rooms&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">          </span><span class="nv">&lt;room&gt;</span><span class="s">5</span><span class="nv">&lt;/room&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">          </span><span class="nv">&lt;room&gt;</span><span class="s">7</span><span class="nv">&lt;/room&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">        </span><span class="nv">&lt;/rooms&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">      </span><span class="nv">&lt;/root&gt;</span><span class="s"></span>
+</span><span class='line'><span class="s">    </span><span class="k">&quot;&quot;&quot;</span><span class="nf"></span>
+</span><span class='line'><span class="nf">  </span><span class="k">And </span><span class="nf">I call &quot;</span><span class="s">each(&#39;/root/rooms/room&#39;).as_int</span><span class="nf">&quot; on the document and collect the results</span>
+</span><span class='line'><span class="nf">  </span><span class="k">Then </span><span class="nf">the results should contain </span><span class="s">5</span><span class="nf"></span>
+</span><span class='line'><span class="nf">  </span><span class="k">And </span><span class="nf">the results should contain </span><span class="s">5</span><span class="nf"></span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To avoid having to define the code which handles the called block in the
+scenario it&#8217;s been hidden with &#8220;and collect the results&#8221;. If we put the
+block in the scenario we&#8217;d also have to deal with the assertion on the results or collecting them into some container in the scenario too. I figured this would be a bit messy. The implementation for these steps gets a bit hairy:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="no">When</span> <span class="sr">/^I call &quot;([^&quot;]*)&quot; on the document and collect the results$/</span> <span class="k">do</span> <span class="o">|</span><span class="n">code</span><span class="o">|</span>
+</span><span class='line'>  <span class="vi">@results</span> <span class="o">=</span> <span class="vi">@doc</span><span class="o">.</span><span class="n">instance_eval</span><span class="p">(</span><span class="s2">&quot;results = [];&quot;</span> <span class="o">+</span> <span class="n">code</span> <span class="o">+</span> <span class="s2">&quot;{|res| results &lt;&lt; res}; results;&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Help! What&#8217;s happening here? OK, well we&#8217;re defining an array, executing
+the code from the scenario and adding a block to the function call that
+appends items passed to the block to an array&#8230; all in a string
+executed against the instance. Riiighhht..</p>
+
+<p>There&#8217;s more features you can browse in the <a href="https://github.com/jamesalmond/dozuki/tree/master/features">Dozuki GitHub
+repository</a>.
+Take a look!</p>
+
+<h2>Conclusion</h2>
+
+<p>Well, that&#8217;s my first attempt at Cucumber as documentation. What do you
+think?</p>
+
+<p>The first obstacle I came across was finding a balance between the amount of code in
+the document and the amount of natural language. Too much natural
+language you lose the benefit of knowing how to run the code, too much
+code and you lose the &#8216;running commentary&#8217; and it&#8217;s less expressive. My
+intention was to use enough code to cover that &#8216;feature&#8217; of the gem and
+not cover other features.</p>
+
+<p>Secondly, and I didn&#8217;t spend too long thinking about this, the block
+examples result in some funky steps. The less code in the example means
+a bit more work behind the scenes but I think it&#8217;s worth it and
+hopefully the intent is understood. I also
+tried to keep the steps as simple and readable as possible so anyone who
+wanted to do some digging might find out a bit more. I think the block
+one might be stretching it a bit..!</p>
+
+<p>Hopefully I&#8217;ve covered enough examples to give other people an idea of how to start having a go at this.
+Overall, I think it&#8217;s something I&#8217;d pursue. The simple examples are easy to follow, easy to maintain, document the code and function as tests. Surely worth something?</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">James Almond</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-02-22T00:00:00+00:00" pubdate data-updated="true"></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://blog.jamesalmond.com/testing-gems-with-cucumber" data-via="JamesAlmond" data-counturl="http://blog.jamesalmond.com/testing-gems-with-cucumber" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/using-pygmentize-with-jekyll" title="Previous Post: Pygmentize errors with Jekyll">&laquo; Pygmentize errors with Jekyll</a>
+      
+      
+        <a class="basic-alignment right" href="/simple-rails-route-helpers" title="Next Post: Simple Rails route helpers">Simple Rails route helpers &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/using-simple-form-in-an-engine">Using simple_form in a Rails 3 engine</a>
+      </li>
+    
+      <li class="post">
+        <a href="/what-if-you-could-only-tweet-5-times-a-day">What if you could only tweet 5 times a day?</a>
+      </li>
+    
+      <li class="post">
+        <a href="/simple-rails-route-helpers">Simple Rails route helpers</a>
+      </li>
+    
+      <li class="post">
+        <a href="/testing-gems-with-cucumber">Cucumber for gem documentation</a>
+      </li>
+    
+      <li class="post">
+        <a href="/using-pygmentize-with-jekyll">Pygmentize errors with Jekyll</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/jamesalmond">@jamesalmond</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'jamesalmond',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - James Almond -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'jamesalmond';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

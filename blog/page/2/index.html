@@ -1,0 +1,821 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>jamesalmond.com blog</title>
+  <meta name="author" content="James Almond">
+
+  
+  <meta name="description" content="I&#8217;ve recently seen an article on Rails best practices that encouraged the use of a &#8216;magic&#8217; controller gem to abstract all the &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.jamesalmond.com/blog/page/2">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="jamesalmond.com blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">jamesalmond.com blog</a></h1>
+  
+    <h2>Thoughts of a thinker</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.jamesalmond.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/rails-rendering-the-right-view">Rails: rendering the right view</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-11-09T00:00:00+00:00" pubdate data-updated="true"></time>
+        
+           | <a href="/rails-rendering-the-right-view#disqus_thread"
+             data-disqus-identifier="http://blog.jamesalmond.com/rails-rendering-the-right-view">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I&#8217;ve recently seen an article on Rails best practices that encouraged the use of a &#8216;magic&#8217; controller gem to abstract all the controller logic away from the user. Now, I&#8217;m all for skinny controllers (I&#8217;ll come to the fat models at a later date) and I&#8217;m sure these gems work great for basic CRUD apps but who&#8217;s ever created &#8216;just a basic CRUD app&#8217;?  These kind of gems, along with most of the tutorials I&#8217;ve seen, reinforce the idea that a controller can only redirect or render a view that matches the name of the method. Want to render something based on the state of the model then you just use a partial, right?</p>
+
+<p>Well, no. I believe that the view should be responsible for taking an object (or multiple objects) and rendering the required output; not taking some objects and choosing which views to render based on their state. It&#8217;s the job of the controller to choose what to render. The offending code generally looks something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1">#some_object_controller.rb</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">SomeObjectController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">search</span>
+</span><span class='line'>    <span class="vi">@search_results</span> <span class="o">=</span> <span class="no">SomeClass</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:search_term</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># search.html.haml</span>
+</span><span class='line'><span class="o">-</span> <span class="k">if</span> <span class="vi">@search_results</span><span class="o">.</span><span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span>
+</span><span class='line'>  <span class="o">-</span> <span class="vi">@search_results</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">result</span><span class="o">|</span>
+</span><span class='line'>    <span class="c1">#...</span>
+</span><span class='line'><span class="o">-</span> <span class="k">else</span>
+</span><span class='line'>  <span class="o">%</span><span class="nb">p</span> <span class="no">Sorry</span><span class="p">,</span> <span class="n">you</span> <span class="n">have</span> <span class="n">no</span> <span class="n">results!</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This can be refactored to something like the following:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1">#some_object_controller.rb</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">SomeObjectController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">search</span>
+</span><span class='line'>    <span class="vi">@search_results</span> <span class="o">=</span> <span class="no">SomeClass</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:search_term</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="vi">@search_results</span><span class="o">.</span><span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span>
+</span><span class='line'>      <span class="n">render</span> <span class="ss">:search_results</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="n">render</span> <span class="ss">:no_search_results</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># search_results.html.haml</span>
+</span><span class='line'><span class="o">-</span> <span class="vi">@search_results</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">result</span><span class="o">|</span>
+</span><span class='line'>  <span class="c1">#...</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># no_search_results.html.haml</span>
+</span><span class='line'><span class="o">%</span><span class="nb">p</span> <span class="no">Sorry</span><span class="p">,</span> <span class="n">you</span> <span class="n">have</span> <span class="n">no</span> <span class="n">results!</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This clearly separates the responsibility of each view. You can even do something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">SomeObjectController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">show</span>
+</span><span class='line'>    <span class="vi">@object</span> <span class="o">=</span> <span class="no">SomeObject</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">render</span> <span class="vi">@object</span><span class="o">.</span><span class="n">status</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>With the corresponding view file for each of the (finite) states of the object.</p>
+
+<p>&#8220;But you shouldn&#8217;t put logic in your controllers!&#8221;. Yes, you should.  You should put controller logic in your controllers. Agreed, you shouldn&#8217;t put business logic or the logic of your storage layer in a controller; but the logic about what should be done with the results of a query (or similar) is definitely suited to the controller.</p>
+
+<p>How do we benefit:</p>
+
+<ul>
+<li>Although controllers aren&#8217;t the easiest thing to test, views are even more laborious. Moving the logic from the view to the controller makes it easier to test.</li>
+<li>The view now has a single responsibility. One view is responsible for rendering no results, one for rendering a sequence of results. This makes it less fragile: you&#8217;re less likely to break another part of the system when changing the no results page.</li>
+<li>As each view has an individual responsibility it becomes easier to find the view when it needs changing. As long as you use understandable file names.</li>
+<li>The view no longer has logic in it. Great for anyone that writes HTML/HAML but is scared of teh Rubies!</li>
+</ul>
+
+
+<p>This small refactor has the effect of making your intentions more easily testable, your views clearers and your code more flexible and less fragile.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/testing-asynchronous-sinatra-with-rspec-and-c">Testing asynchronous Sinatra with RSpec and Cucumber</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-11-08T00:00:00+00:00" pubdate data-updated="true"></time>
+        
+           | <a href="/testing-asynchronous-sinatra-with-rspec-and-c#disqus_thread"
+             data-disqus-identifier="http://blog.jamesalmond.com/testing-asynchronous-sinatra-with-rspec-and-c">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I&#8217;ve been using some EventMachine and asynchronous Sinatra stuff recently and the change in paradigm to event-driven code makes testing a little more difficult. I tend to like to do integration tests using Cucumber but getting an app running within Cucumber was troublesome. Luckily the async_sintra library comes with some test helpers that integrate with rack-test built in that make testing a little easier.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="no">ENV</span><span class="o">[</span><span class="s2">&quot;RACK_ENV&quot;</span><span class="o">]</span> <span class="o">=</span> <span class="s1">&#39;test&#39;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;rspec&#39;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;test/unit&#39;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;rack/test&#39;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s2">&quot;sinatra/async/test&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">module</span> <span class="nn">AppRunner</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">app</span>
+</span><span class='line'>    <span class="ss">My</span><span class="p">:</span><span class="ss">:App</span><span class="o">.</span><span class="n">new</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'><span class="no">World</span><span class="p">(</span><span class="ss">Test</span><span class="p">:</span><span class="ss">:Unit</span><span class="o">::</span><span class="no">Assertions</span><span class="p">,</span> <span class="ss">Sinatra</span><span class="p">:</span><span class="ss">:Async</span><span class="o">::</span><span class="ss">Test</span><span class="p">:</span><span class="ss">:Methods</span><span class="p">,</span> <span class="no">AppRunner</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">post_json</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">json</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">header</span> <span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;application/json&#39;</span>
+</span><span class='line'>  <span class="n">apost</span> <span class="n">path</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">to_json</span>
+</span><span class='line'>  <span class="n">em_async_continue</span>
+</span><span class='line'>  <span class="n">last_response</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The helpers have a few parts that rely on test/unit, which I dont use, so we have to include the test/unit assertions into the world. We can then use the aget, apost, aput etc. helpers (in a similar way to rack-test) to make requests to the app set up in the World block. The &#8216;em_async_continue&#8217; call cranks up Eventmachine to ensure anything queued within Eventmachine gets completed before we try to access the body.</p>
+
+<p>You can use a similar technique to test your apps in RSpec:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s2">&quot;spec_helper&quot;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s2">&quot;sinatra/async/test&quot;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;test/unit&#39;</span>
+</span><span class='line'><span class="k">module</span> <span class="nn">My</span>
+</span><span class='line'>  <span class="n">describe</span> <span class="no">App</span> <span class="k">do</span>
+</span><span class='line'>    <span class="kp">include</span> <span class="ss">Sinatra</span><span class="p">:</span><span class="ss">:Async</span><span class="o">::</span><span class="ss">Test</span><span class="p">:</span><span class="ss">:Methods</span>
+</span><span class='line'>    <span class="kp">include</span> <span class="ss">Test</span><span class="p">:</span><span class="ss">:Unit</span><span class="o">::</span><span class="no">Assertions</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">app</span>
+</span><span class='line'>      <span class="no">App</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">subject</span> <span class="p">{</span> <span class="n">apost</span> <span class="s2">&quot;/some/url&quot;</span><span class="p">,</span> <span class="n">import_json</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">it</span> <span class="s2">&quot;should do something&quot;</span> <span class="k">do</span>
+</span><span class='line'>      <span class="n">last_response</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">should</span> <span class="o">.</span><span class="n">.</span><span class="o">.</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I&#8217;m not sure this is the best way to integrate async_sinatra into a test suite but after fruitless hours of trying other ways it seems to do the trick.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/the-value-of-a-website">The value of a website</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-06-13T00:00:00+01:00" pubdate data-updated="true"></time>
+        
+           | <a href="/the-value-of-a-website#disqus_thread"
+             data-disqus-identifier="http://blog.jamesalmond.com/the-value-of-a-website">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I helped some friends moved house this weekend and they&#8217;d hired a &#8220;man with a van&#8221; to move the bigger items. We got chatting and he asked me what I did for a living to which I replied &#8220;Web Developer&#8221;. Bad move..</p>
+
+<p>He then spent the next 10 minutes or so fuming about a website he&#8217;d recently had made for his business. About how it was &#8220;just a template&#8221; and the &#8220;company&#8221; were now &#8220;hassling him for money&#8221; and how they wanted more money to make changes to the site.</p>
+
+<p>Now, this man had already done one removal that day and charged somewhere around £150 for half a day&#8217;s work. So let&#8217;s say he completes a minimum 3 moves a week for the sake of argument (paid in cash, of course!), equating to about £23000/year. And the reason for wanting a website would surely be as a marketing tool to generate more business and therefore money, not only for the current year but for years to come.</p>
+
+<p>This man had paid the sum of £150 for the website described above, 0.6% of his annual turnover or the cost of one removal. I think this raises two questions: 1) who is making websites for £150?! and 2) who considers £150 a good amount to spend on a marketing tool?</p>
+
+<p>As I said in my previous blog post, the value of websites are hard to determine, maybe down to the &#8220;I&#8217;ve got a friend&#8217;s son&#8217;s cousin that does websites&#8221; syndrome. But in this situation I found that, whilst sympathetic, it was very hard to not give the &#8220;you get what you pay for&#8221; talk. So I gave it to him.</p>
+
+<p>I&#8217;m not really sure who&#8217;s to blame here, the customer obviously wants to get value for money and spend as little money as possible and the developer wants to attract clients with cheap prices. But we&#8217;re in a time now where the average customer has a much greater exposure to high quality websites than they would have done 10 years ago, it&#8217;s just they also believe that these websites cost the same to create as a 1 page 1999 static site. As more people move online and see the value of advertising and reaching customers, I think the days of the bob-a-job web designer/developer are over. They just can&#8217;t charge tiny prices and reach high expectations of today&#8217;s customer. Customers need clear justifications as where the costs are going and why they should invest the money required and the expected returns. I could go on about ROI, and value for money but I won&#8217;t&#8230;</p>
+
+<p>The conversation ended with the gentleman in question asking me if I&#8217;d like to do his site for him. He wanted a site built from scratch, and another two sites to reflect two other domains he&#8217;d bought. Oh, and he wanted to be able to edit the pages and upload pictures&#8230; and some adverts doing for Gumtree and Google. &#8220;It&#8217;ll only take an hour or two, right? I don&#8217;t want to pay £150 again.&#8221;</p>
+
+<p>You know what they say, once bitten, twice&#8230; bitten?</p>
+
+<p>I didn&#8217;t give him my number.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/the-bcs">The BCS</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-06-13T00:00:00+01:00" pubdate data-updated="true"></time>
+        
+           | <a href="/the-bcs#disqus_thread"
+             data-disqus-identifier="http://blog.jamesalmond.com/the-bcs">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I&#8217;ve never really felt the need to join the BCS (or The Chartered Institute for IT as it is now known, but that&#8217;s <a href="http://twitter.com/#search?q=%23bcstransform">another story</a>. I don&#8217;t feel I&#8217;d get much out of it. More &#8220;Networking Opportunities&#8221;, anyone?</p>
+
+<p>I came across this blog post by <a href="http://www.adoptioncurve.net/archives/2010/06/the-peoples-front-of-bcs.php">Tim Duckett</a> that sums up quite nicely something I&#8217;ve felt for a while:</p>
+
+<blockquote><p>I could put “MBCS” after my name if I really wanted to, and put the BCS logo on my business cards. But given the areas of the business in which I work I doubt anyone would know what MBCS stands for – and they’d probably laugh at me for using it if they did.</p></blockquote>
+
+<p>The BCS also offer the title of Chartered IT Professional (CITP), a title they claim has been:</p>
+
+<blockquote><p>recently updated according to the needs of such international IT industry leaders as IBM, Microsoft and BP.</p></blockquote>
+
+<p>So what about the rest of us, who don&#8217;t work in huge multi-national companies?</p>
+
+<p>As a web developer, I work in an industry where it is already hard for customers and clients to understand the value of the services they are spending money on (everyone knows &#8220;a friend&#8217;s son who does websites&#8221;, right?). So differentiating between prospective developers for an inexperienced client can be quite hard. But my heart sinks a little bit when I think about a situation where a client selects the CITP developer as they are &#8220;more qualified&#8221; to do the job.</p>
+
+<p>I know it&#8217;s our job to educate the customer on why they should choose us and not everyone is naive enough to chose purely on certification, but with the roles of IT professionals being so widely varied chartered status simply cannot hold as much weight as in other professions. Do we also have to educate our customers about this now, too?</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/tracking-down-railsactiverecord-magic-queries">Tracking down Rails/ActiveRecord magic queries with QueryTrace</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-06-11T00:00:00+01:00" pubdate data-updated="true"></time>
+        
+           | <a href="/tracking-down-railsactiverecord-magic-queries#disqus_thread"
+             data-disqus-identifier="http://blog.jamesalmond.com/tracking-down-railsactiverecord-magic-queries">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I&#8217;m not going to open the can of worms that is &#8220;Rails Magic (TM)&#8221;, but sometimes you need to track down why Rails is doing something that you don&#8217;t expect it to.</p>
+
+<p>A form helper I was using was unexpectedly loading all objects from the database rather than just the ones I passed it. Turns out I was actually passing it a nil object, but whilst I was investigating I came across the neat plugin QueryTrace.</p>
+
+<p>QueryTrace gives you log output with a backtrace of where the query came from, allowing you to track down rogue queries:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Night Load (2.5ms)   SELECT * FROM `nights` WHERE (`nights`.room_type_id = 1) ORDER BY date ASC
+</span><span class='line'>    app/helpers/admin/nights_helper.rb:68:in `nights_form_helper'
+</span><span class='line'>    app/views/admin/nights/edit.html.haml:13
+</span><span class='line'>    haml (3.0.10) rails/./lib/haml/helpers/action_view_mods.rb:225:in `call'
+</span><span class='line'>    haml (3.0.10) rails/./lib/haml/helpers/action_view_mods.rb:225:in `form_for_without_live_validations'
+</span><span class='line'>    haml (3.0.10) lib/haml/helpers.rb:588:in `call'
+</span><span class='line'>    haml (3.0.10) lib/haml/helpers.rb:588:in `haml_bind_proc'
+</span><span class='line'>    ....
+</span><span class='line'>    dragonfly (0.6.1) lib/dragonfly/middleware.rb:13:in `call'</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It is installed as a plugin using</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>script/plugin install git://github.com/ntalbott/query_trace.git</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As this <a href="http://pivotallabs.com/users/alex/blog/articles/300-rake-query-trace">Pivotal Labs blog post suggests</a>, the plugin can also be useful for load or performance but may slow down the rest of your app whilst it is being run.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/testing-subdomains-using-capybara">Testing subdomains using Capybara</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-06-04T00:00:00+01:00" pubdate data-updated="true"></time>
+        
+           | <a href="/testing-subdomains-using-capybara#disqus_thread"
+             data-disqus-identifier="http://blog.jamesalmond.com/testing-subdomains-using-capybara">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I&#8217;ve been using the excellent Capybara gem to run integration tests in the app I&#8217;m currently working on. This app requires custom user-chosen subdomains, which the Capybara wiki admits are hard to test using Capybara:</p>
+
+<blockquote><p>Domain names (including subdomains) don’t work under rack-test. Since it’s a pain to set up subdomains for the other drivers anyway, you should consider an alternate solution.</p></blockquote>
+
+<p>The main difficulty is getting your app to be accessible through non-default hosts and managing the differences between drivers. As I was on a bit of a testing binge I refused to believe this so attempted to hack my way through this problem. Note, this solution requires you to alter your hosts file (or otherwise point requests to the right place) so if that&#8217;s not for you I can&#8217;t help.</p>
+
+<p>The first thing I wanted to do is to be able to define the host Capybara uses to access the app, both to set the subdomain and set the length of the TLD to match my subdomain_fu configuration over different drivers (rack-test tests under example.org, others under localhost). So I added a manual_host configuration option to the Capybara Server class:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Capybara</span><span class="o">::</span><span class="no">Server</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">manual_host</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</span><span class='line'>    <span class="vi">@manual_host</span> <span class="o">=</span> <span class="n">value</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">manual_host</span>
+</span><span class='line'>    <span class="vi">@manual_host</span> <span class="o">||=</span> <span class="s1">&#39;localhost&#39;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">path</span> <span class="o">=~</span> <span class="sr">/^http/</span>
+</span><span class='line'>      <span class="n">path</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="p">(</span><span class="no">Capybara</span><span class="o">.</span><span class="n">app_host</span> <span class="o">||</span> <span class="s2">&quot;http://</span><span class="si">#{</span><span class="ss">Capybara</span><span class="p">:</span><span class="ss">:Server</span><span class="o">.</span><span class="n">manual_host</span><span class="si">}</span><span class="s2">:</span><span class="si">#{</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">path</span><span class="o">.</span><span class="n">to_s</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This defaults to localhost, retaining previous functionality if not used. It also overwrites the url generation method to use the manually set host instead of localhost. We can then choose to send requests using the modified host using tags:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># env.rb</span>
+</span><span class='line'><span class="no">Before</span> <span class="p">(</span><span class="s1">&#39;@subdomain&#39;</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>  <span class="ss">Capybara</span><span class="p">:</span><span class="ss">:Server</span><span class="o">.</span><span class="n">manual_host</span> <span class="o">=</span> <span class="s1">&#39;subdomain.myapp.local&#39;</span>
+</span><span class='line'>  <span class="no">Capybara</span><span class="o">.</span><span class="n">default_host</span> <span class="o">=</span> <span class="s1">&#39;subdomain.example.org&#39;</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">After</span><span class="p">(</span><span class="s1">&#39;@subdomain&#39;</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>  <span class="no">Capybara</span><span class="o">.</span><span class="n">default_host</span> <span class="o">=</span> <span class="s2">&quot;example.org&quot;</span>
+</span><span class='line'>  <span class="ss">Capybara</span><span class="p">:</span><span class="ss">:Server</span><span class="o">.</span><span class="n">manual_host</span> <span class="o">=</span> <span class="s2">&quot;myapp.local&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So I can tag any features I wish to run under a subdomain with @subdomain. After the feature is run the hosts are reset to the defaults. The last step is to add the line &#8220;127.0.0.1    myapp.local&#8221; and &#8220;127.0.0.1    subdomain.myapp.local&#8221; to your hosts file and make sure all other subdomains that are generated in your tests are also in your hosts file.</p>
+
+<p>It may well be that you can set example.org to point locally in your hosts file or rack-test can use other domains that can be used across non-rack-test drivers. It&#8217;s not a flexible solution but it works for me!</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/spork-doesnt-pick-up-some-file-changes">Spork doesn&#8217;t pick up some file changes</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-05-10T00:00:00+01:00" pubdate data-updated="true"></time>
+        
+           | <a href="/spork-doesnt-pick-up-some-file-changes#disqus_thread"
+             data-disqus-identifier="http://blog.jamesalmond.com/spork-doesnt-pick-up-some-file-changes">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I&#8217;ve been using spork to speed up my tests for a while now, and I like it. But today I noticed that changes in my files weren&#8217;t being picked up by RSpec or Cucumber.</p>
+
+<p>The spork Github page suggests running &#8220;spork &#8211;diagnose&#8221; to find out what&#8217;s being loaded on startup by spork and therefore what&#8217;s not and will be monitored.</p>
+
+<p>The culprit was a factory_girl factory that specified the class using the class constant, rather than a string, which meant the class was loaded before forking and any changes in the file weren&#8217;t picked up thereafter.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># before</span>
+</span><span class='line'><span class="no">Factory</span><span class="o">.</span><span class="n">define</span> <span class="ss">:base_post</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="no">Post</span> <span class="k">do</span> <span class="o">|</span><span class="n">h</span><span class="o">|</span>
+</span><span class='line'>  <span class="n">h</span><span class="o">.</span><span class="n">name</span> <span class="s2">&quot;Demo&quot;</span>
+</span><span class='line'>  <span class="o">.</span><span class="n">.</span><span class="o">.</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#after</span>
+</span><span class='line'><span class="no">Factory</span><span class="o">.</span><span class="n">define</span> <span class="ss">:base_post</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s2">&quot;Post&quot;</span> <span class="k">do</span> <span class="o">|</span><span class="n">h</span><span class="o">|</span>
+</span><span class='line'>  <span class="n">h</span><span class="o">.</span><span class="n">name</span> <span class="s2">&quot;Demo&quot;</span>
+</span><span class='line'>  <span class="o">.</span><span class="n">.</span><span class="o">.</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Changing the class to a string meant the Post class wasn&#8217;t picked up in the pre-fork code and future changes were picked up.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/using-simple-form-in-an-engine">Using simple_form in a Rails 3 engine</a>
+      </li>
+    
+      <li class="post">
+        <a href="/what-if-you-could-only-tweet-5-times-a-day">What if you could only tweet 5 times a day?</a>
+      </li>
+    
+      <li class="post">
+        <a href="/simple-rails-route-helpers">Simple Rails route helpers</a>
+      </li>
+    
+      <li class="post">
+        <a href="/testing-gems-with-cucumber">Cucumber for gem documentation</a>
+      </li>
+    
+      <li class="post">
+        <a href="/using-pygmentize-with-jekyll">Pygmentize errors with Jekyll</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/jamesalmond">@jamesalmond</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'jamesalmond',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - James Almond -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'jamesalmond';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

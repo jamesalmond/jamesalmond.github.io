@@ -1,0 +1,656 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Resourceful routing with Rails - jamesalmond.com blog</title>
+  <meta name="author" content="James Almond">
+
+  
+  <meta name="description" content="Resource routing in Rails is most often used for nesting related ActiveRecord objects, such as a post having many comments: 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.jamesalmond.com/resourceful-routing-with-rails">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="jamesalmond.com blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">jamesalmond.com blog</a></h1>
+  
+    <h2>Thoughts of a thinker</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.jamesalmond.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Resourceful routing with Rails</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-01-03T00:00:00+00:00" pubdate data-updated="true"></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://blog.jamesalmond.com">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Resource routing in Rails is most often used for nesting related ActiveRecord objects, such as a post having many comments:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Post</span> <span class="o">&lt;</span> <span class="ss">ActiveRecord</span><span class="p">:</span><span class="ss">:Base</span>
+</span><span class='line'>  <span class="n">has_many</span> <span class="ss">:comments</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Comment</span> <span class="o">&lt;</span> <span class="ss">ActiveRecord</span><span class="p">:</span><span class="ss">:Base</span>
+</span><span class='line'>  <span class="n">belongs_to</span> <span class="ss">:post</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#routes</span>
+</span><span class='line'><span class="n">resources</span> <span class="ss">:posts</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">resources</span> <span class="ss">:comments</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The resource method of the router hooks up the &#8220;RESTful&#8221; urls with a set of standard set of controller methods and HTTP verb:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">post_comments</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">comments</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>          <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;comments&quot;</span><span class="p">}</span>
+</span><span class='line'>              <span class="no">POST</span>   <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">comments</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>          <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;create&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;comments&quot;</span><span class="p">}</span>
+</span><span class='line'> <span class="n">new_post_comment</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">comments</span><span class="o">/</span><span class="kp">new</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>      <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;comments&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="n">edit_post_comment</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">comments</span><span class="o">/</span><span class="ss">:id</span><span class="o">/</span><span class="n">edit</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span> <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;edit&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;comments&quot;</span><span class="p">}</span>
+</span><span class='line'> <span class="n">post_comment</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">comments</span><span class="o">/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>      <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;comments&quot;</span><span class="p">}</span>
+</span><span class='line'>              <span class="no">PUT</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">comments</span><span class="o">/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>      <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;update&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;comments&quot;</span><span class="p">}</span>
+</span><span class='line'>              <span class="no">DELETE</span> <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">comments</span><span class="o">/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>      <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;destroy&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;comments&quot;</span><span class="p">}</span>
+</span><span class='line'>        <span class="n">posts</span> <span class="no">GET</span>    <span class="sr">/posts(.:format)                            {:action=&gt;&quot;index&quot;, :controller=&gt;&quot;posts&quot;}</span>
+</span><span class='line'><span class="sr">              POST   /</span><span class="n">posts</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                            <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;create&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>     <span class="n">new_post</span> <span class="no">GET</span>    <span class="sr">/posts/ne</span><span class="n">w</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>    <span class="n">edit_post</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="o">/</span><span class="n">edit</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                   <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;edit&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>         <span class="n">post</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>              <span class="no">PUT</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;update&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>              <span class="no">DELETE</span> <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;destroy&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>These structures are map nice and clearly to the default CRUD actions of your AR objects and how to use this functionality is covered in other tutorials.</p>
+
+<p>Once you step outside of the default CRUD actions it&#8217;s not immediately clear how to add further functionality to your routes structure. One of the options is to add extra methods to the resource&#8217;s collection or methods as a member of each object. Let&#8217;s take the concept of setting the status of a blog post from &#8220;draft&#8221; to &#8220;published&#8221;, with the status of the post being stored as a string in the post object. We&#8217;ll need a page to view the current status and a URL to post to that updates the status.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">resources</span> <span class="ss">:posts</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">member</span> <span class="k">do</span>
+</span><span class='line'>    <span class="n">get</span> <span class="ss">:status</span>
+</span><span class='line'>    <span class="n">put</span> <span class="ss">:update_status</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>which gives us the following URLs:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>   <span class="n">post_status</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">status</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="n">post_update_status</span> <span class="no">PUT</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">update_status</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span> <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;update_status&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>         <span class="n">posts</span> <span class="no">GET</span>    <span class="sr">/posts(.:format)                        {:action=&gt;&quot;index&quot;, :controller=&gt;&quot;posts&quot;}</span>
+</span><span class='line'><span class="sr">               POST   /</span><span class="n">posts</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;create&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>      <span class="n">new_post</span> <span class="no">GET</span>    <span class="sr">/posts/ne</span><span class="n">w</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                    <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>     <span class="n">edit_post</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="o">/</span><span class="n">edit</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>               <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;edit&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>          <span class="n">post</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                    <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>               <span class="no">PUT</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                    <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;update&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>               <span class="no">DELETE</span> <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                    <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;destroy&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In this example I&#8217;ve chosen not to use the Post&#8217;s update URL to set the status. By using a separate controller method we can also use a separate model method (rather than the default &#8216;update_attributes&#8217;). This means that when we set a new status we can handle any business logic around a status change within that specific method and not within a pile of spaghetti callback methods. I&#8217;ll save the &#8216;ActiveRecord spaghetti callback methods are evil&#8217; post for another day!</p>
+
+<p>The following code sets up the controller actions that handle the new routes:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">PostsController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># with corresponding posts/status.html.haml</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">status</span>
+</span><span class='line'>    <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">update_status</span>
+</span><span class='line'>    <span class="n">post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">post</span><span class="o">.</span><span class="n">update_status</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:new_status</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">redirect_to</span> <span class="n">post_path</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Hooray! Minus some of the AR implementation, we&#8217;ve now got status updates.
+Whilst this example is fairly simple, when we start adding more functionality to posts both our controller and routes start to get a bit clumsy and bloated. Let&#8217;s add some search functionality to our posts. Iwant a page that has the search box on that posts its options to the app, the app will then convert those options into some URL parameters that we can access as a get method (allowing our users to bookmark a search and refresh without issue):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">resources</span> <span class="ss">:posts</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">member</span> <span class="k">do</span>
+</span><span class='line'>    <span class="n">get</span>  <span class="ss">:status</span>
+</span><span class='line'>    <span class="n">put</span>  <span class="ss">:update_status</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>  <span class="n">collection</span> <span class="k">do</span>
+</span><span class='line'>    <span class="n">get</span>  <span class="ss">:search</span>
+</span><span class='line'>    <span class="n">post</span>  <span class="ss">:new_search</span>
+</span><span class='line'>    <span class="n">get</span>  <span class="ss">:show_search</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>   <span class="n">status_post</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="o">/</span><span class="n">status</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="n">update_status_post</span> <span class="no">PUT</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="o">/</span><span class="n">update_status</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span> <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;update_status&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">search_posts</span> <span class="no">GET</span>    <span class="sr">/posts/se</span><span class="n">arch</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>            <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;search&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">new_search_posts</span> <span class="no">POST</span>   <span class="sr">/posts/ne</span><span class="n">w_search</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;new_search&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'> <span class="n">show_search_posts</span> <span class="no">GET</span>    <span class="sr">/posts/s</span><span class="n">how_search</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>       <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;show_search&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>         <span class="n">posts</span> <span class="no">GET</span>    <span class="sr">/posts(.:format)                   {:action=&gt;&quot;index&quot;, :controller=&gt;&quot;posts&quot;}</span>
+</span><span class='line'><span class="sr">               POST   /</span><span class="n">posts</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                   <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;create&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>      <span class="n">new_post</span> <span class="no">GET</span>    <span class="sr">/posts/ne</span><span class="n">w</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>               <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>     <span class="n">edit_post</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="o">/</span><span class="n">edit</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>          <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;edit&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>          <span class="n">post</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>               <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>               <span class="no">PUT</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>               <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;update&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>               <span class="no">DELETE</span> <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>               <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;destroy&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And our Posts controller also needs some more methods:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">PostsController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># other Post CRUD methods</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># with corresponding posts/status.html.haml</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">status</span>
+</span><span class='line'>    <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">update_status</span>
+</span><span class='line'>    <span class="n">post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">post</span><span class="o">.</span><span class="n">update_status</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:new_status</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">redirect_to</span> <span class="n">post_path</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">search</span>
+</span><span class='line'>    <span class="c1"># renders the search form</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">new_search</span>
+</span><span class='line'>    <span class="n">redirect_to</span> <span class="n">posts_show_search_path</span> <span class="no">Post</span><span class="o">.</span><span class="n">process_search_params</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:search</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">show_search</span>
+</span><span class='line'>    <span class="vi">@posts</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">search_from_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We now have search! But there&#8217;s also a few things that make this example less than ideal. The more functionality we add to Posts the more routes we have to define manually and the more methods we have in our Posts controller. This results in controllers that are hard to navigate due to size, routes that are defined by how the developer decided to name them that day (e.g. new_search could be create_search etc.) and the Posts controller is now responsible for much more than it should ! So, how can we fix this? We need some uniform system of representing concepts in our system.</p>
+
+<h2>Re-thinking resources</h2>
+
+<p>Resources in the Rails routing world are often mapped directly to persistence or ActiveRecord objects. Let&#8217;s redefine the use of resource to mean a individual &#8216;concept&#8217; within the system, something that has its own behaviour or affects another part of the system. Our persistence objects still map to resources as before but other concepts such as actions on those objects or specific behaviours of those objects can also map to resources. Get back to the example will probably make it a bit clearer.
+Within our example a Post still remains a resource as it was previously. We can use the methods and routes created by the definition of Post as a resource to view, create and alter the definition of a post. For example, changing the basic attributes such as title or body.
+But, given our new definition of resource we can now start to consider other things resources. As the status attribute doesn&#8217;t really define the post but defines the state the post is in it&#8217;s a good candidate for having the functionality to change it being moved from the Posts controller. This allows us to deal with the implications of changing the state separately from the mundane actions of simply updating attributes; a division of responsibility from the previous example. We now have the methods we need to show the current status (GET show) and update the status (PUT update).
+We can also consider the search as a resource. Now, this one maps a little more closely to the idea of a resource as we previously defined, but doesn&#8217;t map directly to a persistence model. We have and action that shows the form (GET new), we have a method that accepts posted parameters (POST create) and we have a method that displays a specific search given an identifier (the search term) (GET show).
+We can now tidy up our routes a bit:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">resources</span> <span class="ss">:posts</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">resource</span> <span class="ss">:status</span><span class="p">,</span> <span class="ss">:controller</span> <span class="o">=&gt;</span> <span class="ss">:posts_status_controller</span>
+</span><span class='line'>  <span class="n">resources</span> <span class="ss">:searches</span><span class="p">,</span> <span class="ss">:controller</span> <span class="o">=&gt;</span> <span class="ss">:posts_searches_controller</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'> <span class="n">post_status</span> <span class="no">POST</span>   <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">status</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>            <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;create&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_status_controller&quot;</span><span class="p">}</span>
+</span><span class='line'> <span class="n">new_post_status</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">status</span><span class="o">/</span><span class="kp">new</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_status_controller&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="n">edit_post_status</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">status</span><span class="o">/</span><span class="n">edit</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>       <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;edit&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_status_controller&quot;</span><span class="p">}</span>
+</span><span class='line'>             <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">status</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>            <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_status_controller&quot;</span><span class="p">}</span>
+</span><span class='line'>             <span class="no">PUT</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">status</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>            <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;update&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_status_controller&quot;</span><span class="p">}</span>
+</span><span class='line'>             <span class="no">DELETE</span> <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">status</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>            <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;destroy&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_status_controller&quot;</span><span class="p">}</span>
+</span><span class='line'>   <span class="n">post_searches</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">searches</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>          <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_searches_controller&quot;</span><span class="p">}</span>
+</span><span class='line'>             <span class="no">POST</span>   <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">searches</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>          <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;create&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_searches_controller&quot;</span><span class="p">}</span>
+</span><span class='line'> <span class="n">new_post_search</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">searches</span><span class="o">/</span><span class="kp">new</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>      <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_searches_controller&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="n">edit_post_search</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">searches</span><span class="o">/</span><span class="ss">:id</span><span class="o">/</span><span class="n">edit</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span> <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;edit&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_searches_controller&quot;</span><span class="p">}</span>
+</span><span class='line'> <span class="n">post_search</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">searches</span><span class="o">/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>      <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_searches_controller&quot;</span><span class="p">}</span>
+</span><span class='line'>             <span class="no">PUT</span>    <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">searches</span><span class="o">/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>      <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;update&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_searches_controller&quot;</span><span class="p">}</span>
+</span><span class='line'>             <span class="no">DELETE</span> <span class="sr">/posts/</span><span class="ss">:post_id</span><span class="o">/</span><span class="n">searches</span><span class="o">/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>      <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;destroy&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts_searches_controller&quot;</span><span class="p">}</span>
+</span><span class='line'>       <span class="n">posts</span> <span class="no">GET</span>    <span class="sr">/posts(.:format)                            {:action=&gt;&quot;index&quot;, :controller=&gt;&quot;posts&quot;}</span>
+</span><span class='line'><span class="sr">             POST   /</span><span class="n">posts</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                            <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;create&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>    <span class="n">new_post</span> <span class="no">GET</span>    <span class="sr">/posts/ne</span><span class="n">w</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>   <span class="n">edit_post</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="o">/</span><span class="n">edit</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                   <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;edit&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>        <span class="n">post</span> <span class="no">GET</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>             <span class="no">PUT</span>    <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;update&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span><span class='line'>             <span class="no">DELETE</span> <span class="sr">/posts/</span><span class="ss">:id</span><span class="p">(</span><span class="o">.</span><span class="ss">:format</span><span class="p">)</span>                        <span class="p">{</span><span class="ss">:action</span><span class="o">=&gt;</span><span class="s2">&quot;destroy&quot;</span><span class="p">,</span> <span class="ss">:controller</span><span class="o">=&gt;</span><span class="s2">&quot;posts&quot;</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There&#8217;s two things to note with this example. Firstly the status is defined as a singular resource as we don&#8217;t have a collection of statuses, so we don&#8217;t need the URLs that have the unique IDs.
+It&#8217;s routes like /posts/1/status/edit or PUTting to /posts/1/status to update a post that seem to make perfect sense to me.
+Secondly, we&#8217;ve specified the names of the controllers. If we only had one search in the system and one status concept we wouldn&#8217;t have to specify the names of our controllers and we could just name them to match the name of the resource. But while we&#8217;re at this dividing responsibility game, let&#8217;s make it clear what the responsibility of the controller is by naming it explicitly. We can also move the actions of from the previous single controller into the new controllers.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">PostsStatusController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">show</span>
+</span><span class='line'>    <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">update</span>
+</span><span class='line'>    <span class="n">post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">post</span><span class="o">.</span><span class="n">update_status</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:new_status</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">redirect_to</span> <span class="n">post_path</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">PostsSearchController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">new</span>
+</span><span class='line'>    <span class="c1"># renders the search form</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">create</span>
+</span><span class='line'>    <span class="n">redirect_to</span> <span class="n">posts_show_search_path</span> <span class="no">Post</span><span class="o">.</span><span class="n">process_search_params</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:search</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">show</span>
+</span><span class='line'>    <span class="vi">@posts</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">search_from_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Starting to look a little cleaner, right? And also, we haven&#8217;t defined any methods outside of the normal (create, show, edit, update, delete) which makes all our controllers consistent and predictable. We&#8217;ve also got some nice routes that look reasonably RESTful (I&#8217;ve tried to avoid using the term RESTful as I don&#8217;t want to get into the semantics of REST, but I&#8217;m feeling reckless today!). We can now also move our views out of the posts folder into the separate posts_searches and posts_status folders; much less clutter.
+Hopefully this (rather long!) post has given you an idea of how to structure your controllers and routes in a manageable, consistent and predictable way.</p>
+
+<h2>Summary (TL;DR)</h2>
+
+<p>Resource routing in Rails can be used outside of persistence or AR objects to provide predictable, clean and RESTful routes for your application&#8217;s behaviour. This practice encourages the separation of concerns by creating new controllers, methods and views which are responsible for specific behaviours of the system making the code easier to understand, navigate and test.</p>
+
+<h2>Another example</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">resources</span> <span class="ss">:bookings</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">resource</span> <span class="ss">:cancellation</span><span class="p">,</span> <span class="ss">:controller</span> <span class="o">=&gt;</span> <span class="ss">:booking_cancellation_controller</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># Cancellation page: /bookings/1/cancellation/new (BookingsCancellationController GET new)</span>
+</span><span class='line'><span class="c1"># Process the cancellation: /bookings/1/cancellation (BookingsCancellationController POST create)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">James Almond</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-01-03T00:00:00+00:00" pubdate data-updated="true"></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://blog.jamesalmond.com/resourceful-routing-with-rails" data-via="JamesAlmond" data-counturl="http://blog.jamesalmond.com/resourceful-routing-with-rails" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/simpler-xml-parsing-with-dozuki" title="Previous Post: Simpler XML parsing with Dozuki">&laquo; Simpler XML parsing with Dozuki</a>
+      
+      
+        <a class="basic-alignment right" href="/using-pygmentize-with-jekyll" title="Next Post: Pygmentize errors with Jekyll">Pygmentize errors with Jekyll &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/using-simple-form-in-an-engine">Using simple_form in a Rails 3 engine</a>
+      </li>
+    
+      <li class="post">
+        <a href="/what-if-you-could-only-tweet-5-times-a-day">What if you could only tweet 5 times a day?</a>
+      </li>
+    
+      <li class="post">
+        <a href="/simple-rails-route-helpers">Simple Rails route helpers</a>
+      </li>
+    
+      <li class="post">
+        <a href="/testing-gems-with-cucumber">Cucumber for gem documentation</a>
+      </li>
+    
+      <li class="post">
+        <a href="/using-pygmentize-with-jekyll">Pygmentize errors with Jekyll</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/jamesalmond">@jamesalmond</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'jamesalmond',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - James Almond -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'jamesalmond';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,623 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Using simple_form in a Rails 3 engine - jamesalmond.com blog</title>
+  <meta name="author" content="James Almond">
+
+  
+  <meta name="description" content="I&#8217;ve been developing an eco-system of engines recently and want to share
+some components across engines. One of those was simple_form. &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.jamesalmond.com/using-simple-form-in-an-engine">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="jamesalmond.com blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">jamesalmond.com blog</a></h1>
+  
+    <h2>Thoughts of a thinker</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.jamesalmond.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Using simple_form in a Rails 3 engine</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-04-23T00:00:00+01:00" pubdate data-updated="true"></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://blog.jamesalmond.com">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I&#8217;ve been developing an eco-system of engines recently and want to share
+some components across engines. One of those was <a href="https://github.com/plataformatec/simple_form">simple_form</a>. Unsurprisingly, it&#8217;s quite simple to do!</p>
+
+<p>In a file in your lib folder, let&#8217;s say my-engine/simple-form.rb,
+require simple_form and add the config generated underneath. Then, make
+sure this file is required when your engine is loaded and hey presto,
+simple forms in your views! I&#8217;ve used
+the default Twitter Bootstrap config here:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># lib/my-engine/simple-form.rb</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;simple_form&#39;</span>
+</span><span class='line'><span class="c1"># Use this setup block to configure all options available in SimpleForm.</span>
+</span><span class='line'><span class="no">SimpleForm</span><span class="o">.</span><span class="n">setup</span> <span class="k">do</span> <span class="o">|</span><span class="n">config</span><span class="o">|</span>
+</span><span class='line'>  <span class="c1"># Wrappers are used by the form builder to generate a</span>
+</span><span class='line'>  <span class="c1"># complete input. You can remove any component from the</span>
+</span><span class='line'>  <span class="c1"># wrapper, change the order or even add your own to the</span>
+</span><span class='line'>  <span class="c1"># stack. The options given below are used to wrap the</span>
+</span><span class='line'>  <span class="c1"># whole input.</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">wrappers</span> <span class="ss">:default</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="ss">:input</span><span class="p">,</span>
+</span><span class='line'>    <span class="ss">:hint_class</span> <span class="o">=&gt;</span> <span class="ss">:field_with_hint</span><span class="p">,</span> <span class="ss">:error_class</span> <span class="o">=&gt;</span> <span class="ss">:field_with_errors</span> <span class="k">do</span> <span class="o">|</span><span class="n">b</span><span class="o">|</span>
+</span><span class='line'>    <span class="c1">## Extensions enabled by default</span>
+</span><span class='line'>    <span class="c1"># Any of these extensions can be disabled for a</span>
+</span><span class='line'>    <span class="c1"># given input by passing: `f.input EXTENSION_NAME =&gt; false`.</span>
+</span><span class='line'>    <span class="c1"># You can make any of these extensions optional by</span>
+</span><span class='line'>    <span class="c1"># renaming `b.use` to `b.optional`.</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1"># Determines whether to use HTML5 (:email, :url, ...)</span>
+</span><span class='line'>    <span class="c1"># and required attributes</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:html5</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1"># Calculates placeholders automatically from I18n</span>
+</span><span class='line'>    <span class="c1"># You can also pass a string as f.input :placeholder =&gt; &quot;Placeholder&quot;</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:placeholder</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">## Optional extensions</span>
+</span><span class='line'>    <span class="c1"># They are disabled unless you pass `f.input EXTENSION_NAME =&gt; :lookup`</span>
+</span><span class='line'>    <span class="c1"># to the input. If so, they will retrieve the values from the model</span>
+</span><span class='line'>    <span class="c1"># if any exists. If you want to enable the lookup for any of those</span>
+</span><span class='line'>    <span class="c1"># extensions by default, you can change `b.optional` to `b.use`.</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1"># Calculates maxlength from length validations for string inputs</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">optional</span> <span class="ss">:maxlength</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1"># Calculates pattern from format validations for string inputs</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">optional</span> <span class="ss">:pattern</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1"># Calculates min and max from length validations for numeric inputs</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">optional</span> <span class="ss">:min_max</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1"># Calculates readonly automatically from readonly attributes</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">optional</span> <span class="ss">:readonly</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">## Inputs</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:label_input</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:hint</span><span class="p">,</span>  <span class="ss">:wrap_with</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="ss">:span</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="ss">:hint</span> <span class="p">}</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:error</span><span class="p">,</span> <span class="ss">:wrap_with</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="ss">:span</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="ss">:error</span> <span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">wrappers</span> <span class="ss">:bootstrap</span><span class="p">,</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;control-group&#39;</span><span class="p">,</span> <span class="ss">:error_class</span> <span class="o">=&gt;</span> <span class="s1">&#39;error&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">b</span><span class="o">|</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:html5</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:placeholder</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:label</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">wrapper</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;controls&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">ba</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">ba</span><span class="o">.</span><span class="n">use</span> <span class="ss">:input</span>
+</span><span class='line'>      <span class="n">ba</span><span class="o">.</span><span class="n">use</span> <span class="ss">:error</span><span class="p">,</span> <span class="ss">:wrap_with</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;span&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;help-inline&#39;</span> <span class="p">}</span>
+</span><span class='line'>      <span class="n">ba</span><span class="o">.</span><span class="n">use</span> <span class="ss">:hint</span><span class="p">,</span>  <span class="ss">:wrap_with</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;help-block&#39;</span> <span class="p">}</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">wrappers</span> <span class="ss">:prepend</span><span class="p">,</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s2">&quot;control-group&quot;</span><span class="p">,</span> <span class="ss">:error_class</span> <span class="o">=&gt;</span> <span class="s1">&#39;error&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">b</span><span class="o">|</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:html5</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:placeholder</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:label</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">wrapper</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;controls&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">input</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">input</span><span class="o">.</span><span class="n">wrapper</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;input-prepend&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">prepend</span><span class="o">|</span>
+</span><span class='line'>        <span class="n">prepend</span><span class="o">.</span><span class="n">use</span> <span class="ss">:input</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>      <span class="n">input</span><span class="o">.</span><span class="n">use</span> <span class="ss">:hint</span><span class="p">,</span>  <span class="ss">:wrap_with</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;span&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;help-block&#39;</span> <span class="p">}</span>
+</span><span class='line'>      <span class="n">input</span><span class="o">.</span><span class="n">use</span> <span class="ss">:error</span><span class="p">,</span> <span class="ss">:wrap_with</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;span&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;help-inline&#39;</span> <span class="p">}</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">wrappers</span> <span class="ss">:append</span><span class="p">,</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s2">&quot;control-group&quot;</span><span class="p">,</span> <span class="ss">:error_class</span> <span class="o">=&gt;</span> <span class="s1">&#39;error&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">b</span><span class="o">|</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:html5</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:placeholder</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">use</span> <span class="ss">:label</span>
+</span><span class='line'>    <span class="n">b</span><span class="o">.</span><span class="n">wrapper</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;controls&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">input</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">input</span><span class="o">.</span><span class="n">wrapper</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;input-append&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">append</span><span class="o">|</span>
+</span><span class='line'>        <span class="n">append</span><span class="o">.</span><span class="n">use</span> <span class="ss">:input</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>      <span class="n">input</span><span class="o">.</span><span class="n">use</span> <span class="ss">:hint</span><span class="p">,</span>  <span class="ss">:wrap_with</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;span&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;help-block&#39;</span> <span class="p">}</span>
+</span><span class='line'>      <span class="n">input</span><span class="o">.</span><span class="n">use</span> <span class="ss">:error</span><span class="p">,</span> <span class="ss">:wrap_with</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="ss">:tag</span> <span class="o">=&gt;</span> <span class="s1">&#39;span&#39;</span><span class="p">,</span> <span class="ss">:class</span> <span class="o">=&gt;</span> <span class="s1">&#39;help-inline&#39;</span> <span class="p">}</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Wrappers for forms and inputs using the Twitter Bootstrap toolkit.</span>
+</span><span class='line'>  <span class="c1"># Check the Bootstrap docs (http://twitter.github.com/bootstrap)</span>
+</span><span class='line'>  <span class="c1"># to learn about the different styles for forms and inputs,</span>
+</span><span class='line'>  <span class="c1"># buttons and other elements.</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">default_wrapper</span> <span class="o">=</span> <span class="ss">:bootstrap</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Define the way to render check boxes / radio buttons with labels.</span>
+</span><span class='line'>  <span class="c1"># Defaults to :nested for bootstrap config.</span>
+</span><span class='line'>  <span class="c1">#   :inline =&gt; input + label</span>
+</span><span class='line'>  <span class="c1">#   :nested =&gt; label &gt; input</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">boolean_style</span> <span class="o">=</span> <span class="ss">:nested</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Default class for buttons</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">button_class</span> <span class="o">=</span> <span class="s1">&#39;btn&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Method used to tidy up errors.</span>
+</span><span class='line'>  <span class="c1"># config.error_method = :first</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Default tag used for error notification helper.</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">error_notification_tag</span> <span class="o">=</span> <span class="ss">:div</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># CSS class to add for error notification helper.</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">error_notification_class</span> <span class="o">=</span> <span class="s1">&#39;alert alert-error&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># ID to add for error notification helper.</span>
+</span><span class='line'>  <span class="c1"># config.error_notification_id = nil</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Series of attempts to detect a default label method for collection.</span>
+</span><span class='line'>  <span class="c1"># config.collection_label_methods = [ :to_label, :name, :title, :to_s ]</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Series of attempts to detect a default value method for collection.</span>
+</span><span class='line'>  <span class="c1"># config.collection_value_methods = [ :id, :to_s ]</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># You can wrap a collection of radio/check boxes in a pre-defined tag, defaulting to none.</span>
+</span><span class='line'>  <span class="c1"># config.collection_wrapper_tag = nil</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># You can define the class to use on all collection wrappers. Defaulting to none.</span>
+</span><span class='line'>  <span class="c1"># config.collection_wrapper_class = nil</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># You can wrap each item in a collection of radio/check boxes with a tag,</span>
+</span><span class='line'>  <span class="c1"># defaulting to :span. Please note that when using :boolean_style = :nested,</span>
+</span><span class='line'>  <span class="c1"># SimpleForm will force this option to be a label.</span>
+</span><span class='line'>  <span class="c1"># config.item_wrapper_tag = :span</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># You can define a class to use in all item wrappers. Defaulting to none.</span>
+</span><span class='line'>  <span class="c1"># config.item_wrapper_class = nil</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># How the label text should be generated altogether with the required text.</span>
+</span><span class='line'>  <span class="c1"># config.label_text = lambda { |label, required| &quot;#{required} #{label}&quot; }</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># You can define the class to use on all labels. Default is nil.</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">label_class</span> <span class="o">=</span> <span class="s1">&#39;control-label&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># You can define the class to use on all forms. Default is simple_form.</span>
+</span><span class='line'>  <span class="c1"># config.form_class = :simple_form</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># You can define which elements should obtain additional classes</span>
+</span><span class='line'>  <span class="c1"># config.generate_additional_classes_for = [:wrapper, :label, :input]</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Whether attributes are required by default (or not). Default is true.</span>
+</span><span class='line'>  <span class="c1"># config.required_by_default = true</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Tell browsers whether to use default HTML5 validations (novalidate option).</span>
+</span><span class='line'>  <span class="c1"># Default is enabled.</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">browser_validations</span> <span class="o">=</span> <span class="kp">false</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Collection of methods to detect if a file type was given.</span>
+</span><span class='line'>  <span class="c1"># config.file_methods = [ :mounted_as, :file?, :public_filename ]</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Custom mappings for input types. This should be a hash containing a regexp</span>
+</span><span class='line'>  <span class="c1"># to match as key, and the input type that will be used when the field name</span>
+</span><span class='line'>  <span class="c1"># matches the regexp as value.</span>
+</span><span class='line'>  <span class="c1"># config.input_mappings = { /count/ =&gt; :integer }</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Default priority for time_zone inputs.</span>
+</span><span class='line'>  <span class="c1"># config.time_zone_priority = nil</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Default priority for country inputs.</span>
+</span><span class='line'>  <span class="c1"># config.country_priority = nil</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Default size for text inputs.</span>
+</span><span class='line'>  <span class="c1"># config.default_input_size = 50</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># When false, do not use translations for labels.</span>
+</span><span class='line'>  <span class="c1"># config.translate_labels = true</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Automatically discover new inputs in Rails&#39; autoload path.</span>
+</span><span class='line'>  <span class="c1"># config.inputs_discovery = true</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Cache SimpleForm inputs discovery</span>
+</span><span class='line'>  <span class="c1"># config.cache_discovery = !Rails.env.development?</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">James Almond</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-04-23T00:00:00+01:00" pubdate data-updated="true"></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://blog.jamesalmond.com/using-simple-form-in-an-engine" data-via="JamesAlmond" data-counturl="http://blog.jamesalmond.com/using-simple-form-in-an-engine" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/what-if-you-could-only-tweet-5-times-a-day" title="Previous Post: What if you could only tweet 5 times a day?">&laquo; What if you could only tweet 5 times a day?</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/using-simple-form-in-an-engine">Using simple_form in a Rails 3 engine</a>
+      </li>
+    
+      <li class="post">
+        <a href="/what-if-you-could-only-tweet-5-times-a-day">What if you could only tweet 5 times a day?</a>
+      </li>
+    
+      <li class="post">
+        <a href="/simple-rails-route-helpers">Simple Rails route helpers</a>
+      </li>
+    
+      <li class="post">
+        <a href="/testing-gems-with-cucumber">Cucumber for gem documentation</a>
+      </li>
+    
+      <li class="post">
+        <a href="/using-pygmentize-with-jekyll">Pygmentize errors with Jekyll</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/jamesalmond">@jamesalmond</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'jamesalmond',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - James Almond -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'jamesalmond';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
