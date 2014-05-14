@@ -22,7 +22,7 @@ Night Load (2.5ms)   SELECT * FROM `nights` WHERE (`nights`.room_type_id = 1) OR
 ```
 
 It is installed as a plugin using
-````
+```
 script/plugin install git://github.com/ntalbott/query_trace.git
 ```
 
