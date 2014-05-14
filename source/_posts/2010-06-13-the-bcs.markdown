@@ -1,0 +1,21 @@
+---
+title: The BCS
+layout: post
+---
+
+I've never really felt the need to join the BCS (or The Chartered Institute for IT as it is now known, but that's [another story](http://twitter.com/#search?q=%23bcstransform). I don't feel I'd get much out of it. More "Networking Opportunities", anyone?
+
+I came across this blog post by [Tim Duckett](http://www.adoptioncurve.net/archives/2010/06/the-peoples-front-of-bcs.php) that sums up quite nicely something I've felt for a while:
+
+>I could put “MBCS” after my name if I really wanted to, and put the BCS logo on my business cards. But given the areas of the business in which I work I doubt anyone would know what MBCS stands for – and they’d probably laugh at me for using it if they did.
+
+The BCS also offer the title of Chartered IT Professional (CITP), a title they claim has been:
+
+>recently updated according to the needs of such international IT industry leaders as IBM, Microsoft and BP.
+
+So what about the rest of us, who don't work in huge multi-national companies?
+
+As a web developer, I work in an industry where it is already hard for customers and clients to understand the value of the services they are spending money on (everyone knows "a friend's son who does websites", right?). So differentiating between prospective developers for an inexperienced client can be quite hard. But my heart sinks a little bit when I think about a situation where a client selects the CITP developer as they are "more qualified" to do the job.
+
+I know it's our job to educate the customer on why they should choose us and not everyone is naive enough to chose purely on certification, but with the roles of IT professionals being so widely varied chartered status simply cannot hold as much weight as in other professions. Do we also have to educate our customers about this now, too?
+
