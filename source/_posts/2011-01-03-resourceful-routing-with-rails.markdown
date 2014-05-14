@@ -21,7 +21,7 @@ end
 ```
 The resource method of the router hooks up the "RESTful" urls with a set of standard set of controller methods and HTTP verb:
 
-{% highlight text%}
+```
     post_comments GET    /posts/:post_id/comments(.:format)          {:action=>"index", :controller=>"comments"}
                   POST   /posts/:post_id/comments(.:format)          {:action=>"create", :controller=>"comments"}
  new_post_comment GET    /posts/:post_id/comments/new(.:format)      {:action=>"new", :controller=>"comments"}
@@ -56,7 +56,7 @@ end
 
 which gives us the following URLs:
 
-{% highlight text%}
+```
        post_status GET    /posts/:post_id/status(.:format)        {:action=>"status", :controller=>"posts"}
 post_update_status PUT    /posts/:post_id/update_status(.:format) {:action=>"update_status", :controller=>"posts"}
              posts GET    /posts(.:format)                        {:action=>"index", :controller=>"posts"}
@@ -108,7 +108,7 @@ resources :posts do
 end
 
 ```
-{% highlight text%}
+```
        status_post GET    /posts/:id/status(.:format)        {:action=>"status", :controller=>"posts"}
 update_status_post PUT    /posts/:id/update_status(.:format) {:action=>"update_status", :controller=>"posts"}
       search_posts GET    /posts/search(.:format)            {:action=>"search", :controller=>"posts"}
@@ -170,7 +170,7 @@ resources :posts do
 end
 ```
 
-{% highlight text%}
+```
      post_status POST   /posts/:post_id/status(.:format)            {:action=>"create", :controller=>"posts_status_controller"}
  new_post_status GET    /posts/:post_id/status/new(.:format)        {:action=>"new", :controller=>"posts_status_controller"}
 edit_post_status GET    /posts/:post_id/status/edit(.:format)       {:action=>"edit", :controller=>"posts_status_controller"}
